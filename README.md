@@ -4,4 +4,3 @@
 
 ## Contributors
 - [@asyx-creator](https://github.com/asyx-creator) — идея
-- **Claude** (Anthropic) — код, стили и шутки 🤖
