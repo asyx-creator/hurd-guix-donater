@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquid Donater — GNU Hurd & Guix</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    overflow: hidden;
+    color: #fff;
+  }
+
+  /* плавающие цветные шарики (фон) */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: .6;
+    animation: float 12s ease-in-out infinite alternate;
+  }
+  .blob:nth-child(1) { width: 400px; height: 400px; background: #ff6ec4; top: -100px; left: -100px; }
+  .blob:nth-child(2) { width: 350px; height: 350px; background: #7873f5; bottom: -80px; right: -60px; animation-delay: -4s; }
+  .blob:nth-child(3) { width: 250px; height: 250px; background: #42e2b8; top: 55%; left: 15%; animation-delay: -8s; }
+
+  @keyframes float {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(60px, -40px) scale(1.15); }
+  }
+
+  .card {
+    position: relative;
+    z-index: 2;
+    width: 420px;
+    max-width: 92vw;
+    padding: 40px 32px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    text-align: center;
+  }
+
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
+  .sub { font-size: .9rem; opacity: .8; margin-bottom: 28px; }
+
+  .glass-btn {
+    display: block;
+    width: 100%;
+    margin: 14px 0;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: linear-gradient(135deg, rgba(255,255,255,.22), rgba(255,255,255,.06));
+    backdrop-filter: blur(12px);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s ease, background .2s ease;
+  }
+  .glass-btn:hover { transform: scale(1.03); background: rgba(255,255,255,.3); }
+  .glass-btn:active { transform: scale(.97); }
+  .glass-btn small { display: block; font-weight: 400; font-size: .78rem; opacity: .75; margin-top: 4px; }
+
+  #status { margin-top: 18px; font-size: .85rem; min-height: 2.4em; opacity: .9; }
+
+  .progress-wrap {
+    margin-top: 10px;
+    height: 14px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    overflow: hidden;
+  }
+  #bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #42e2b8, #7873f5, #ff6ec4);
+    transition: width .6s ease;
+  }
+  .goal { font-size: .75rem; opacity: .7; margin-top: 6px; }
+</style>
+</head>
+<body>
+  <div class="blob"></div>
+  <div class="blob"></div>
+  <div class="blob"></div>
+
+  <div class="card">
+    <h1>💧 Liquid Donater</h1>
+    <p class="sub">Поддержи проекты, которые «вот-вот будут готовы»: GNU Hurd и GNU Guix</p>
+
+    <button class="glass-btn" onclick="donate('hurd')">
+      🐘 Задонатить GNU Hurd
+      <small>37 лет в разработке — стабильность гарантирована</small>
+    </button>
+
+    <button class="glass-btn" onclick="donate('guix')">
+      🐐 Задонатить GNU Guix
+      <small>воспроизводимо задонатить — на другой машине будет тот же донат</small>
+    </button>
+
+    <div class="progress-wrap"><div id="bar"></div></div>
+    <p class="goal">Собрано: <span id="amount">0</span> из 999 999 ₽ (до релиза Hurd 1.0)</p>
+
+    <p id="status"></p>
+  </div>
+
+<script>
+  let amount = 0;
+  const bar = document.getElementById('bar');
+  const amountEl = document.getElementById('amount');
+  const statusEl = document.getElementById('status');
+
+  const jokes = {
+    hurd: [
+      "Донат принят! Он уже компилируется... с 1990 года.",
+      "Спасибо! Ваш донат поставлен в очередь translators.",
+      "Микроядро благодарит, макрорезультата пока нет.",
+      "Донат отправлен. Он пока не загрузился, но держитесь.",
+    ],
+    guix: [
+      "Донат воспроизводимо принят: hash совпал!",
+      "guix pull выполнен. Ваш донат детерминирован.",
+      "Спасибо! Донат собран из исходников и на 100% свободен.",
+      "Ваш донат помечен как substitutes available. Сюрприз!",
+    ]
+  };
+
+  function donate(project) {
+    const sum = Math.floor(Math.random() * 900) + 100;
+    amount += sum;
+    amountEl.textContent = amount;
+    bar.style.width = Math.min(amount / 999999 * 100, 100) + '%';
+    const list = jokes[project];
+    statusEl.textContent = list[Math.floor(Math.random() * list.length)];
+  }
+</script>
+</body>
+</html>
